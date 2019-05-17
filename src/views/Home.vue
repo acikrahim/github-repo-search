@@ -39,10 +39,10 @@
 		</div>
 		<div v-if="results.length != 0" class="pagination-btn">
 			<a class="button page-btn" @click="backward"><fa-icon icon="chevron-left"/></a>
-			<a class="button page-btn">{{pageArray[0]}}</a>
-			<a class="button page-btn">{{pageArray[1]}}</a>
-			<a class="button page-btn">{{pageArray[2]}}</a>
-			<a class="button page-btn">{{pageArray[3]}}</a>
+			<a class="button page-btn" @click="pageClick(pageArray[0])" :class="{'active': currentPage == pageArray[0]}">{{pageArray[0]}}</a>
+			<a class="button page-btn" @click="pageClick(pageArray[1])" :class="{'active': currentPage == pageArray[1]}">{{pageArray[1]}}</a>
+			<a class="button page-btn" @click="pageClick(pageArray[2])" :class="{'active': currentPage == pageArray[2]}">{{pageArray[2]}}</a>
+			<a class="button page-btn" @click="pageClick(pageArray[3])" :class="{'active': currentPage == pageArray[3]}">{{pageArray[3]}}</a>
 			<span class="button page-btn ellipse">&centerdot;&centerdot;&centerdot;</span>
 			<a class="button page-btn" @click="lastCount">{{totalCount}}</a>
 			<a class="button page-btn" @click="forward"><fa-icon icon="chevron-right"/></a>
@@ -70,9 +70,9 @@ export default {
 			this.isSearch = false
 			this.pageArray = [1, 2, 3, 4]
 			this.currentPage = 1
-			axios.get('https://api.github.com/search/repositories?page=' + page + '&per_page=5&q=' + this.searchStr).then(result => {
+			axios.get('https://api.github.com/search/repositories?page=' + page + '&per_page=10&q=' + this.searchStr).then(result => {
 				this.totalRepo = result.data.total_count
-				this.totalCount = Math.ceil(result.data.total_count/5)
+				this.totalCount = Math.ceil(result.data.total_count/10)
 				this.results = result.data.items
 				if (result.data.items.length == 0) {
 					this.isSearch = true
@@ -81,13 +81,21 @@ export default {
 				this.isSearch = true
 			})
 		},
+		pageClick(page) {
+			this.currentPage = page
+			axios.get('https://api.github.com/search/repositories?page=' + page + '&per_page=10&q=' + this.searchStr).then(result => {
+				this.results = result.data.items
+			}, e => {
+				alert('Only the first 1000 search results are available.')
+			})
+		},
 		forward() {
 			if (this.currentPage + 1 > this.totalCount) return 
 			this.currentPage += 1
 			if (!this.pageArray.includes(this.currentPage)) {
-				this.pageArray = this.pageArray.map(x => x + 1)
+				this.pageArray = [this.currentPage, this.currentPage + 1, this.currentPage + 2, this.currentPage + 3]
 			}
-			axios.get('https://api.github.com/search/repositories?page=' + this.currentPage + '&per_page=5&q=' + this.searchStr).then(result => {
+			axios.get('https://api.github.com/search/repositories?page=' + this.currentPage + '&per_page=10&q=' + this.searchStr).then(result => {
 				this.results = result.data.items
 			}, e => {
 				alert('Only the first 1000 search results are available.')
@@ -97,16 +105,16 @@ export default {
 			if (this.currentPage - 1 == 0) return
 			this.currentPage -= 1
 			if (!this.pageArray.includes(this.currentPage)) {
-				this.pageArray = this.pageArray.map(x => x - 1)
+				this.pageArray = [this.currentPage - 3, this.currentPage - 2, this.currentPage - 1, this.currentPage]
 			}
-			axios.get('https://api.github.com/search/repositories?page=' + this.currentPage + '&per_page=5&q=' + this.searchStr).then(result => {
+			axios.get('https://api.github.com/search/repositories?page=' + this.currentPage + '&per_page=10&q=' + this.searchStr).then(result => {
 				this.results = result.data.items
 			}, e => {
 				alert('Only the first 1000 search results are available.')
 			})
 		},
 		lastCount() {
-			axios.get('https://api.github.com/search/repositories?page=' + this.totalCount + '&per_page=5&q=' + this.searchStr).then(result => {
+			axios.get('https://api.github.com/search/repositories?page=' + this.totalCount + '&per_page=10&q=' + this.searchStr).then(result => {
 				this.currentPage = this.totalCount
 				this.pageArray = [this.totalCount -4, this.totalCount - 3, this.totalCount - 2, this.totalCount - 1]
 				this.results = result.data.items
@@ -174,6 +182,9 @@ export default {
 				margin: 24px 2px;
 				&.ellipse {
 					border: 0;
+				}
+				&.active {
+					background-color: #5082F7;
 				}
 			}
 		}
