@@ -15,7 +15,7 @@
 			<div v-if="results.length">
 				{{ this.totalRepo }} repository results
 			</div>
-			<div v-if="searchStr != null && searchStr != '' && results.length == 0">
+			<div v-if="isSearch && results.length == 0">
 				No repository was found
 			</div>
 		</div>
@@ -61,18 +61,25 @@ export default {
 			totalCount: null,
 			totalRepo: null,
 			pageArray: [],
-			currentPage: null
+			currentPage: null,
+			isSearch: false
 		}
 	},
 	methods: {
 		runApi(page) {
+			this.isSearch = false
 			this.pageArray = [1, 2, 3, 4]
 			this.currentPage = 1
 			axios.get('https://api.github.com/search/repositories?page=' + page + '&per_page=5&q=' + this.searchStr).then(result => {
 				this.totalRepo = result.data.total_count
 				this.totalCount = Math.ceil(result.data.total_count/5)
 				this.results = result.data.items
-			}, e => {console.log(e)})
+				if (result.data.items.length == 0) {
+					this.isSearch = true
+				}
+			}, e => {
+				this.isSearch = true
+			})
 		},
 		forward() {
 			if (this.currentPage + 1 > this.totalCount) return 
